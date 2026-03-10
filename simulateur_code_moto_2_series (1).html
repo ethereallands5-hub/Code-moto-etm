@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulateur Code Moto ETM – 10 séries</title>
+  <style>
+    :root {
+      --bg-top: #1c1236;
+      --bg-mid: #5b2a86;
+      --bg-sunset: #ff7a59;
+      --bg-sand: #ffd166;
+      --card: rgba(15, 23, 42, 0.82);
+      --card-2: rgba(30, 41, 59, 0.92);
+      --line: rgba(255,255,255,0.12);
+      --text: #fff8f1;
+      --muted: #ffe7cc;
+      --primary: #ff5e7e;
+      --primary-2: #ff9966;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --menu-card: rgba(255,255,255,0.12);
+      --menu-card-hover: rgba(255,255,255,0.18);
+      --shadow: 0 24px 80px rgba(0,0,0,0.28);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 28%, var(--bg-sunset) 65%, var(--bg-sand) 100%);
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 78%, rgba(255,245,210,0.55) 0 8%, rgba(255,220,140,0.25) 8% 17%, transparent 18%),
+        linear-gradient(to top, rgba(0,0,0,0.18), transparent 28%);
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 180px;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        linear-gradient(to top, rgba(0,0,0,0.88), rgba(0,0,0,0.45) 38%, transparent 100%),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 220'><path fill='%23000000' d='M0 190 L70 188 L82 120 L88 120 L98 188 L180 188 L194 112 L200 112 L212 188 L280 188 L296 136 L302 136 L318 188 L420 188 L432 92 L438 92 L452 188 L565 188 L575 126 L582 126 L594 188 L695 188 L706 78 L712 78 L724 188 L840 188 L850 138 L856 138 L868 188 L980 188 L990 105 L998 105 L1010 188 L1120 188 L1132 126 L1138 126 L1150 188 L1268 188 L1278 82 L1284 82 L1298 188 L1400 188 L1412 120 L1418 120 L1432 188 L1600 188 L1600 220 L0 220 Z'/><path fill='%23000000' d='M130 188 C120 150 126 112 136 92 C145 75 160 62 178 62 C190 62 200 70 200 82 C200 96 188 102 178 102 C166 102 156 94 154 84 C146 94 144 116 150 134 C156 152 166 172 172 188 Z'/><path fill='%23000000' d='M520 188 C510 150 516 112 526 92 C535 75 550 62 568 62 C580 62 590 70 590 82 C590 96 578 102 568 102 C556 102 546 94 544 84 C536 94 534 116 540 134 C546 152 556 172 562 188 Z'/><path fill='%23000000' d='M880 188 C870 148 876 110 886 90 C896 72 910 60 928 60 C940 60 950 68 950 80 C950 94 938 100 928 100 C916 100 906 92 904 82 C896 92 894 114 900 132 C906 150 916 170 922 188 Z'/><path fill='%23000000' d='M1220 188 C1210 148 1216 110 1226 90 C1236 72 1250 60 1268 60 C1280 60 1290 68 1290 80 C1290 94 1278 100 1268 100 C1256 100 1246 92 1244 82 C1236 92 1234 114 1240 132 C1246 150 1256 170 1262 188 Z'/></svg>") bottom center / cover no-repeat;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 980px;
+      margin: auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .pill {
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.12);
+      color: #fff4e6;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .muted { color: var(--muted); font-size: 14px; }
+
+    .hero {
+      padding: 10px 4px 8px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.1;
+      text-shadow: 0 8px 30px rgba(0,0,0,0.24);
+    }
+
+    .hero p {
+      margin: 0 auto;
+      max-width: 720px;
+      color: #fff3df;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .serie-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--menu-card);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 22px;
+      padding: 18px;
+      cursor: pointer;
+      transition: transform .14s ease, background .14s ease, border-color .14s ease;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+
+    .serie-btn:hover,
+    .serie-btn:active {
+      transform: translateY(-2px);
+      background: var(--menu-card-hover);
+      border-color: rgba(255,255,255,0.22);
+    }
+
+    .serie-btn .title {
+      font-size: 19px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .serie-btn .desc {
+      font-size: 14px;
+      color: #fff0dc;
+      line-height: 1.4;
+    }
+
+    .progress-wrap {
+      height: 12px;
+      background: rgba(255,255,255,0.14);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      transition: width .25s ease;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin: 0 0 8px;
+    }
+
+    .question {
+      font-size: 27px;
+      line-height: 1.35;
+      font-weight: 800;
+      margin: 18px 0 20px;
+    }
+
+    .answers {
+      display: grid;
+      gap: 12px;
+    }
+
+    .answer {
+      width: 100%;
+      text-align: left;
+      background: var(--card-2);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 18px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .12s ease, border-color .12s ease;
+    }
+
+    .answer:active { transform: scale(.99); }
+    .answer:disabled { cursor: default; }
+    .answer.correct { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.7); }
+    .answer.wrong { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.7); }
+
+    .feedback {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      display: none;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .feedback.good { display: block; background: rgba(34,197,94,0.2); color: #dcfce7; }
+    .feedback.bad { display: block; background: rgba(239,68,68,0.2); color: #fee2e2; }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    button.action {
+      border: none;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    #nextBtn { background: linear-gradient(90deg, var(--primary), var(--primary-2)); color: white; }
+    #restartBtn, #restartBtn2, #backMenuBtn, #backMenuBtn2 { background: rgba(15,23,42,0.72); color: white; }
+
+    .hidden { display: none !important; }
+
+    .result {
+      text-align: center;
+      padding: 18px 6px 4px;
+    }
+
+    .big {
+      font-size: 50px;
+      font-weight: 900;
+      margin: 10px 0;
+    }
+
+    .small {
+      color: #fff0dc;
+      line-height: 1.55;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .list {
+      margin-top: 18px;
+      text-align: left;
+      background: rgba(15,23,42,0.65);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .list div {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .list div:last-child { border-bottom: none; }
+
+    @media (max-width: 640px) {
+      body { padding: 10px; }
+      .card { padding: 16px; border-radius: 22px; }
+      .hero h1 { font-size: 28px; }
+      .question { font-size: 22px; }
+      .answer { font-size: 15px; padding: 14px; }
+      .big { font-size: 40px; }
+      .menu-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <div id="menuView">
+        <div class="top">
+          <div class="pill">ETM • Simulateur Code Moto</div>
+          <div class="muted">10 séries de 40 questions</div>
+        </div>
+
+        <div class="hero">
+          <h1>Révise ton code moto<br>en mode sunset 🌴</h1>
+          <p>
+            Choisis une série, réponds aux 40 questions, corrige-toi direct et enchaîne comme sur un vrai entraînement.
+            J’ai gardé le style du questionnaire, mais avec une page d’accueil plus colorée et plus fun.
+          </p>
+        </div>
+
+        <div class="menu-grid" id="menuGrid"></div>
+      </div>
+
+      <div id="quizView" class="hidden">
+        <div class="top">
+          <div class="pill" id="serieLabel">ETM • Série 1</div>
+          <div class="muted" id="counter">Question 1 / 40</div>
+        </div>
+
+        <div class="progress-wrap"><div class="progress" id="progress"></div></div>
+
+        <h2>Mode entraînement</h2>
+        <div class="muted">1 seule bonne réponse par question.</div>
+
+        <div class="question" id="question"></div>
+        <div class="answers" id="answers"></div>
+        <div class="feedback" id="feedback"></div>
+
+        <div class="actions">
+          <button class="action" id="nextBtn" disabled>Question suivante</button>
+          <button class="action" id="restartBtn">Recommencer la série</button>
+          <button class="action" id="backMenuBtn">Menu</button>
+        </div>
+      </div>
+
+      <div id="resultView" class="hidden">
+        <div class="result">
+          <div class="pill" id="resultSerieLabel">Série terminée</div>
+          <div class="big" id="finalScore">0/40</div>
+          <div class="small" id="finalText"></div>
+          <div class="list" id="review"></div>
+          <div class="actions">
+            <button class="action" id="restartBtn2">Refaire la série</button>
+            <button class="action" id="backMenuBtn2">Retour au menu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const baseQuestions = [
+      {q:"Quelle distance de sécurité minimale faut-il garder derrière un véhicule à 90 km/h ?",a:["1 seconde","2 secondes","10 mètres","5 mètres"],c:1,e:"À allure soutenue, on raisonne en temps de sécurité : au moins 2 secondes."},
+      {q:"Que signifie un feu orange fixe ?",a:["Accélérer","S'arrêter sauf impossibilité","Passage prioritaire","Tourner à droite"],c:1,e:"Le feu orange impose l'arrêt, sauf si cela est impossible sans danger immédiat."},
+      {q:"Pourquoi faut-il éviter les bandes blanches sous la pluie ?",a:["Elles sont glissantes","Elles abîment les pneus","Elles sont interdites aux motos","Elles cachent des trous"],c:0,e:"La peinture au sol offre moins d'adhérence quand elle est mouillée."},
+      {q:"Quelle est la vitesse maximale sur autoroute pour une moto en France, par temps sec ?",a:["110 km/h","120 km/h","130 km/h","140 km/h"],c:2,e:"Sur autoroute, la limite générale est 130 km/h par temps sec."},
+      {q:"Que signifie une ligne blanche continue au sol ?",a:["Dépassement conseillé","Dépassement interdit","Stationnement autorisé","Route prioritaire"],c:1,e:"Une ligne continue interdit de la franchir ou de la chevaucher sauf cas très particuliers."},
+      {q:"Pourquoi faut-il éviter de rouler dans l'angle mort d'une voiture ?",a:["Pour économiser du carburant","Parce que le conducteur peut ne pas vous voir","Parce que c'est interdit partout","Parce que cela use les pneus"],c:1,e:"En angle mort, tu peux disparaître du champ de vision du conducteur."},
+      {q:"Quel est le principal risque d'un freinage d'urgence sur sol mouillé ?",a:["La surchauffe moteur","Le blocage des roues","La panne d'essence","L'allongement de la chaîne"],c:1,e:"Sous la pluie, l'adhérence baisse et le risque de blocage ou de glissade augmente."},
+      {q:"À quoi sert principalement l'ABS sur une moto ?",a:["À mieux accélérer","À empêcher le blocage des roues au freinage","À réduire le bruit","À augmenter la vitesse maximale"],c:1,e:"L'ABS aide à conserver du contrôle lors d'un freinage appuyé."},
+      {q:"Que devez-vous faire si vous voyez du gravier dans un virage ?",a:["Freiner fort en penchant","Accélérer pour passer plus vite","Ralentir et éviter les gestes brusques","Klaxonner"],c:2,e:"Le gravier diminue l'adhérence. Il faut rester souple et réduire la vitesse."},
+      {q:"Pourquoi faut-il être visible pour les autres usagers ?",a:["Pour se faire remarquer","Pour réduire le risque d'accident","Pour rouler plus vite","Pour économiser les freins"],c:1,e:"Être vu, c'est laisser aux autres le temps de réagir."},
+      {q:"Que signifie un panneau rond bordé de rouge avec '50' ?",a:["Vitesse conseillée 50","Limitation à 50 km/h","Distance minimale 50 m","Interdiction aux + de 50 cm3"],c:1,e:"Panneau d'interdiction : vitesse maximale autorisée 50 km/h."},
+      {q:"Pourquoi faut-il éviter les angles morts des camions ?",a:["Ils sont toujours sales","Les conducteurs ne vous voient pas","Ils roulent trop lentement","Ils attirent le vent"],c:1,e:"Les poids lourds ont de très grands angles morts."},
+      {q:"Quel est l'effet du vent latéral sur une moto ?",a:["Il peut déstabiliser la moto","Il améliore l'adhérence","Il réduit la consommation","Il n'a aucun effet"],c:0,e:"Le vent latéral peut déporter la moto, surtout au dépassement ou à la sortie d'un abri."},
+      {q:"Que faire si un animal traverse soudainement la route ?",a:["Donner un coup de guidon sec","Freiner et rester maître de la trajectoire","Accélérer","Fermer les yeux"],c:1,e:"Le plus important est de garder le contrôle de la moto."},
+      {q:"Pourquoi faut-il adapter sa vitesse en ville ?",a:["Parce qu'il y a plus de virages","Parce qu'il y a beaucoup d'usagers et d'imprévus","Parce que la route est meilleure","Parce que la moto chauffe moins"],c:1,e:"Piétons, vélos, voitures, ouvertures de portières : la ville demande plus d'anticipation."},
+      {q:"Quelle est la particularité de la conduite de nuit ?",a:["On voit mieux les reliefs","La visibilité est réduite","Le freinage est plus court","Les autres roulent moins vite"],c:1,e:"La nuit, la lecture de la route est plus difficile et la fatigue arrive plus vite."},
+      {q:"Que signifie un panneau annonçant une chaussée glissante ?",a:["Route en travaux","Risque de perte d'adhérence","Présence de verglas obligatoire","Fin d'autoroute"],c:1,e:"Il avertit d'un danger lié à l'adhérence."},
+      {q:"Pourquoi faut-il vérifier les rétroviseurs avant de changer de voie ?",a:["Pour admirer sa moto","Pour vérifier qu'aucun véhicule n'arrive","Pour régler sa position","Pour ralentir"],c:1,e:"Avant tout changement de direction, contrôle visuel indispensable."},
+      {q:"Que devez-vous faire avant de dépasser un véhicule ?",a:["Accélérer sans regarder","Vérifier rétroviseurs et angle mort","Se coller au véhicule","Klaxonner systématiquement"],c:1,e:"Contrôle, signalement, sécurité, puis dépassement si possible."},
+      {q:"Quel est l'avantage de garder une trajectoire fluide en virage ?",a:["Moins de stabilité","Meilleure stabilité","Plus de consommation","Plus de bruit"],c:1,e:"Une trajectoire propre limite les corrections brutales."},
+      {q:"Que signifie un feu rouge clignotant à un passage à niveau ?",a:["Passage libre","Arrêt obligatoire","Ralentissement conseillé","Train en panne"],c:1,e:"Le rouge clignotant impose l'arrêt absolu."},
+      {q:"Pourquoi faut-il ralentir à l'approche d'une intersection ?",a:["Pour changer de radio","Risque de croisement avec d'autres usagers","Pour chauffer les pneus","Parce que c'est toujours obligatoire à 20"],c:1,e:"Une intersection est une zone de conflit potentielle."},
+      {q:"Quel est le rôle principal du casque ?",a:["Protéger la tête","Protéger les épaules","Éviter la pluie seulement","Réduire le bruit du moteur"],c:0,e:"Le casque protège la tête et peut sauver la vie."},
+      {q:"Pourquoi faut-il éviter les accélérations brutales ?",a:["Perte d'adhérence possible","La batterie se vide","Le klaxon marche moins bien","Les feux s'éteignent"],c:0,e:"Une remise de gaz trop violente peut faire patiner ou élargir la trajectoire."},
+      {q:"Pourquoi faut-il adapter sa conduite sous la pluie ?",a:["Parce que la moto consomme plus","Parce que l'adhérence est réduite","Parce qu'on a plus de puissance","Parce que les freins chauffent"],c:1,e:"Sous la pluie, distances de freinage et risque de glissade augmentent."},
+      {q:"Quel est l'effet de la fatigue sur la conduite ?",a:["Meilleure concentration","Baisse de vigilance","Meilleur temps de réaction","Aucun effet"],c:1,e:"La fatigue ralentit les réactions et augmente les erreurs."},
+      {q:"Pourquoi certains motards gardent-ils les doigts prêts sur le frein avant en ville ?",a:["Pour réagir plus vite","Pour montrer leur niveau","Pour chauffer le levier","Pour économiser le pneu arrière"],c:0,e:"En environnement dense, cela peut faire gagner un temps de réaction utile."},
+      {q:"Que faire si la visibilité est réduite par le brouillard ?",a:["Accélérer pour sortir de la zone","Réduire la vitesse et augmenter les distances","Couper les feux","Suivre le véhicule devant de très près"],c:1,e:"Moins on voit loin, plus on doit ralentir."},
+      {q:"Pourquoi faut-il se positionner correctement dans sa voie ?",a:["Pour être visible et anticiper","Pour consommer moins","Pour aller plus vite","Pour éviter d'utiliser les clignotants"],c:0,e:"Le placement aide à voir, être vu et préparer la suite."},
+      {q:"Que devez-vous faire avant un long trajet à moto ?",a:["Partir sans vérifier","Vérifier moto, équipement et trajet","Gonfler les pneus au hasard","Rouler tout de suite à haute vitesse"],c:1,e:"Pression, niveaux, éclairage, équipement, météo et itinéraire : tout compte."},
+      {q:"Le regard en conduite moto sert surtout à :",a:["Lire les panneaux publicitaires","Diriger la trajectoire et anticiper","Regarder la roue avant","Surveiller le compteur en permanence"],c:1,e:"La moto va là où le regard porte. Le regard guide l'action."},
+      {q:"Pourquoi est-il dangereux de freiner brusquement en plein virage ?",a:["Risque de chute","Le moteur cale toujours","La chaîne casse","Le phare s'éteint"],c:0,e:"En virage, une forte demande de frein peut saturer l'adhérence disponible."},
+      {q:"Avant de prendre la route, la première vérification importante concerne :",a:["Le prix de l'essence","L'état de la moto et l'équipement","Le nombre d'abonnés sur les réseaux","La couleur du casque"],c:1,e:"Une moto saine et un équipement complet, c'est la base."},
+      {q:"Un panneau triangulaire avec un cerf annonce :",a:["Une réserve de chasse","Un passage possible d'animaux sauvages","Un zoo","Une route interdite la nuit"],c:1,e:"C'est un panneau de danger signalant des traversées d'animaux."},
+      {q:"Derrière un poids lourd, il faut garder une distance suffisante surtout pour :",a:["Entendre le moteur","Voir plus loin et être vu","Rester au chaud","Rouler plus vite"],c:1,e:"Trop près, tu ne vois rien et lui peut ne pas te percevoir."},
+      {q:"Quand un véhicule devant vous freine brusquement, vous devez :",a:["Le doubler immédiatement","Freiner progressivement en gardant la trajectoire","Fermer les yeux et piler","Accélérer"],c:1,e:"L'objectif est d'éviter l'obstacle sans perdre le contrôle."},
+      {q:"Sur un court trajet, l'équipement complet reste nécessaire car :",a:["Le risque de chute existe aussi","La police contrôle davantage","La moto consomme moins","Le moteur chauffe mieux"],c:0,e:"Une chute à faible vitesse peut déjà blesser gravement."},
+      {q:"À l'approche d'un passage piéton, un marquage en zigzag au sol signale :",a:["Une zone de dépassement","Une zone de vigilance liée au passage piéton","Une piste cyclable","Un arrêt de bus obligatoire"],c:1,e:"Ce marquage attire l'attention sur une zone sensible."},
+      {q:"Pourquoi faut-il anticiper davantage en moto qu'en voiture ?",a:["La moto est moins stable et moins visible","La moto est trop lente","La moto freine toujours moins bien","Il n'y a pas de rétroviseurs"],c:0,e:"La vulnérabilité du motard impose une lecture plus précoce de la route."},
+      {q:"La pression des pneus doit être vérifiée :",a:["Selon la recommandation du constructeur","Seulement quand il fait chaud","Une fois par an","Quand le pneu semble joli"],c:0,e:"La bonne pression conditionne adhérence, stabilité et usure."},
+      {q:"À une intersection sans signalisation, la règle générale est :",a:["Priorité à droite","Priorité au plus rapide","Priorité à la moto","Priorité au plus gros véhicule"],c:0,e:"Sans signalisation particulière, on applique la priorité à droite."},
+      {q:"Avant d'aborder un virage masqué, il faut surtout :",a:["Accélérer pour passer vite","Adapter sa vitesse avant le virage","Freiner fort au milieu du virage","Se mettre au point mort"],c:1,e:"La bonne vitesse se choisit avant d'entrer dans le virage."},
+      {q:"Sous la pluie, la distance de freinage est généralement :",a:["Plus courte","Identique","Plus longue","Nulle avec l'ABS"],c:2,e:"L'adhérence étant plus faible, la distance de freinage augmente."},
+      {q:"Pourquoi faut-il se méfier des portières en ville ?",a:["Elles sont toujours ouvertes","Un occupant peut les ouvrir soudainement","Elles font glisser","Elles masquent les feux"],c:1,e:"Une portière ouverte brusquement peut couper ta trajectoire."},
+      {q:"Lors d'un dépassement, il faut laisser un intervalle latéral suffisant pour :",a:["Être poli","Éviter un écart ou un souffle dangereux","Gagner du temps","Montrer sa maîtrise"],c:1,e:"L'espace latéral te protège d'un écart du véhicule dépassé."},
+      {q:"En cas de forte chaleur, quel élément mérite une attention particulière avant de partir ?",a:["La peinture du réservoir","L'hydratation du pilote","La couleur des gants","Le klaxon"],c:1,e:"La chaleur fatigue vite et peut diminuer la concentration."},
+      {q:"Quand la chaussée est déformée ou bosselée, il faut :",a:["Se crisper sur le guidon","Ralentir et garder une conduite souple","Accélérer franchement","Freiner uniquement de l'avant"],c:1,e:"Une conduite souple aide la moto à garder son équilibre."},
+      {q:"Que risque-t-on en suivant de trop près un véhicule ?",a:["De mieux voir la route","De manquer de temps pour réagir","De consommer moins","Rien si on est attentif"],c:1,e:"Suivre de trop près réduit ton temps de réaction."},
+      {q:"Quand on arrive derrière un bus à l'arrêt, il faut particulièrement se méfier :",a:["D'un contrôle radar","Des piétons qui traversent","Des motos qui doublent","Du moteur du bus"],c:1,e:"Des piétons peuvent surgir devant ou derrière le bus."},
+      {q:"La meilleure manière d'être vu en journée est :",a:["Rouler au milieu des files","Porter un équipement visible et bien se placer","Klaxonner souvent","Rester collé à la ligne centrale"],c:1,e:"Visibilité et placement sont essentiels pour être perçu tôt."},
+      {q:"Avant un changement de direction, le clignotant doit être :",a:["Mis au dernier moment","Mis suffisamment tôt","Toujours inutile en moto","Remplacé par un geste de la main"],c:1,e:"Il doit prévenir les autres assez tôt sans être ambigu."},
+      {q:"Pourquoi faut-il éviter les plaques d'égout en virage sous la pluie ?",a:["Elles sont bruyantes","Elles offrent moins d'adhérence","Elles sont plus hautes","Elles attirent les voitures"],c:1,e:"Le métal devient très glissant quand il est mouillé."},
+      {q:"À l'approche d'un rond-point, il faut surtout :",a:["Arriver vite pour s'insérer","Observer, céder si besoin et adapter sa vitesse","Regarder seulement à gauche sans ralentir","Rouler sur la ligne intérieure"],c:1,e:"L'entrée dans un rond-point demande observation et adaptation."},
+      {q:"Le passager influence la conduite car :",a:["Il rend toujours la moto plus rapide","Il modifie l'équilibre et les distances de freinage","Il bloque l'ABS","Il réduit la visibilité du pilote"],c:1,e:"Avec un passager, la masse augmente et la moto réagit différemment."},
+      {q:"Pourquoi faut-il éviter de fixer un obstacle ?",a:["Parce qu'il peut disparaître","Parce que le regard attire la trajectoire vers lui","Parce que ça fatigue les yeux","Parce que c'est interdit"],c:1,e:"La moto suit en partie le regard. Il faut regarder l'échappatoire."},
+      {q:"En cas de circulation dense, il faut surtout :",a:["Multiplier les accélérations","Augmenter l'anticipation","Rouler au point mort","Regarder uniquement devant"],c:1,e:"Plus le trafic est dense, plus il faut lire loin et large."},
+      {q:"Quand un véhicule met son clignotant pour tourner, il faut :",a:["Toujours lui faire confiance","Rester prudent car il peut changer d'avis ou ne pas t'avoir vu","Le dépasser par l'intérieur","Accélérer"],c:1,e:"Le clignotant donne une intention, pas une garantie."},
+      {q:"Le frein moteur peut être utile surtout pour :",a:["Freiner en douceur et stabiliser la moto","Éteindre le moteur","Augmenter la vitesse","Éviter de regarder la route"],c:0,e:"Il complète le freinage et aide à garder une conduite progressive."},
+      {q:"Sur route mouillée, les premiers instants de pluie sont souvent les plus dangereux car :",a:["La route sèche plus vite","Les résidus rendent la surface très glissante","Les pneus chauffent trop","Le vent disparaît"],c:1,e:"L'eau se mélange aux poussières et hydrocarbures en surface."},
+      {q:"Lorsque la visibilité est limitée dans un virage à droite, il vaut mieux :",a:["Couper complètement à l'intérieur","Rester dans sa voie avec une marge de sécurité","Se déporter sur la voie d'en face","Freiner brutalement une fois incliné"],c:1,e:"On garde une marge pour ne pas être surpris."},
+      {q:"Pourquoi vérifier régulièrement l'état de la chaîne ?",a:["Pour la décoration","Parce qu'une chaîne mal tendue use et peut nuire à la transmission","Parce qu'elle fait consommer moins","Ce n'est pas utile"],c:1,e:"Une chaîne sale ou mal tendue peut impacter sécurité et longévité."},
+      {q:"En cas d'éblouissement par un véhicule la nuit, il faut :",a:["Regarder directement les phares","Réduire l'allure et reporter son regard sur les repères de route","Accélérer pour passer","Couper ses feux"],c:1,e:"Il faut éviter les phares et s'aider des repères au sol ou sur le bord."},
+      {q:"Quel comportement adopter à proximité d'une école ?",a:["Rouler normalement","Ralentir fortement et anticiper l'imprévu","Klaxonner régulièrement","Se coller au véhicule devant"],c:1,e:"Les enfants peuvent surgir de manière imprévisible."},
+      {q:"Pourquoi faut-il ménager une distance de sécurité latérale avec les voitures en stationnement ?",a:["Pour éviter une portière ou un piéton","Pour rouler plus vite","Pour faire chauffer les pneus","Parce que les pneus glissent"],c:0,e:"Une ouverture de porte ou un piéton peut surgir."},
+      {q:"Avant un freinage puissant, une bonne posture consiste à :",a:["Se relâcher complètement","Serrer la moto avec les jambes et rester gainé","Lâcher le guidon","Se pencher en arrière exagérément"],c:1,e:"Une posture stable améliore le contrôle de la moto."},
+      {q:"En inter-files, si elle est autorisée localement et pratiquée, la prudence impose surtout :",a:["D'aller vite pour passer avant tout le monde","De rester très attentif aux changements de voie","De rouler sans éclairage","De regarder uniquement le sol"],c:1,e:"Le danger principal vient d'un véhicule qui change de file sans te voir."},
+      {q:"Les gants homologués sont obligatoires surtout pour :",a:["Faire joli","Protéger les mains en cas de chute","Avoir plus chaud uniquement","Mieux tenir le téléphone"],c:1,e:"Les mains touchent souvent le sol en premier lors d'une chute."},
+      {q:"Quand le vent souffle fort à la sortie d'un tunnel ou derrière un camion, il faut :",a:["Se préparer à un écart possible","Rouler plus près du camion","Freiner à fond","Fermer les yeux"],c:0,e:"Le changement brutal d'appui aérodynamique peut déporter la moto."},
+      {q:"Pourquoi faut-il éviter les mouvements brusques de guidon ?",a:["Ils fatiguent les poignets","Ils peuvent déséquilibrer la moto","Ils augmentent toujours la vitesse","Ils usent le casque"],c:1,e:"La moto aime les commandes progressives."},
+      {q:"À un stop, l'arrêt doit être :",a:["Simplement ralenti","Marqué franchement avant de repartir si la voie est libre","Facultatif s'il n'y a personne","Fait après la ligne"],c:1,e:"Le stop impose un arrêt réel avant de repartir."},
+      {q:"Quand un véhicule arrive en face et semble empiéter, il faut d'abord :",a:["Rester rigide","Réduire l'allure et augmenter sa marge","Accélérer pour passer","Se déporter vers lui"],c:1,e:"Créer de la marge est la meilleure protection."},
+      {q:"Pourquoi faut-il éviter de conduire quand on est énervé ?",a:["Parce que la moto démarre moins bien","Parce que cela altère le jugement et favorise les prises de risque","Parce que c'est interdit","Parce que les pneus refroidissent"],c:1,e:"L'état émotionnel influence directement les décisions."},
+      {q:"En descendant une pente, il faut :",a:["Se laisser aller sans frein","Gérer sa vitesse sans se laisser embarquer","Couper le moteur","Freiner seulement de l'arrière"],c:1,e:"Il faut garder une vitesse maîtrisée et adaptée."},
+      {q:"Le contrôle des pneus permet notamment de vérifier :",a:["Leur couleur","Usure et pression","Le niveau d'huile","Le réglage des rétroviseurs"],c:1,e:"Des pneus en bon état sont essentiels pour l'adhérence."},
+      {q:"Pourquoi faut-il éviter de rester trop longtemps à côté d'un autre véhicule ?",a:["Parce que cela use la boîte","Parce qu'on peut rester dans son angle mort","Parce que c'est interdit partout","Parce que cela vide le réservoir"],c:1,e:"Mieux vaut passer franchement ou garder ses distances."},
+      {q:"Quand une chaussée est sale, boueuse ou couverte de feuilles, il faut :",a:["Conduire plus souplement et ralentir","Accélérer avant de glisser","Freiner fort de l'avant","Ignorer le danger"],c:0,e:"Ces surfaces offrent une adhérence parfois très faible."},
+      {q:"À quoi sert principalement une bonne lecture de route ?",a:["À prédire la météo","À anticiper les dangers et adapter sa conduite","À choisir sa musique","À rouler plus vite"],c:1,e:"Lire la route tôt permet d'agir calmement."},
+      {q:"Avant un long trajet, une pause doit être envisagée :",a:["Seulement si on est en retard","Régulièrement pour garder de la vigilance","Jamais","Uniquement la nuit"],c:1,e:"Les pauses aident à conserver concentration et fraîcheur."},
+      {q:"Quand la chaussée rétrécit, le bon réflexe est :",a:["Forcer le passage","Adapter son allure et observer les autres usagers","Accélérer","Rouler au centre sans regarder"],c:1,e:"Moins d'espace = plus de prudence."},
+      {q:"Pourquoi un équipement avec protections est-il utile même à basse vitesse ?",a:["Parce qu'une chute peut déjà blesser sérieusement","Parce qu'il est plus aérodynamique","Parce qu'il évite la pluie seulement","Parce qu'il remplace l'assurance"],c:0,e:"À basse vitesse aussi, les blessures peuvent être importantes."}
+    ];
+
+    const menuThemes = [
+      "Sécurité & distances", "Signalisation & feux", "Ville & anticipation", "Pluie & adhérence", "Virages & trajectoires",
+      "Visibilité & angles morts", "Équipement & préparation", "Intersection & priorités", "Conduite défensive", "Révision complète"
+    ];
+
+    function shuffle(array, seed) {
+      const arr = [...array];
+      let s = seed;
+      function rand() {
+        s = (s * 9301 + 49297) % 233280;
+        return s / 233280;
+      }
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    const series = Array.from({ length: 10 }, (_, i) => shuffle(baseQuestions, i + 1).slice(0, 40));
+
+    const menuGrid = document.getElementById("menuGrid");
+    series.forEach((_, i) => {
+      const btn = document.createElement("button");
+      btn.className = "serie-btn";
+      btn.innerHTML = `
+        <div class="title">Série ${i + 1} • 40 questions</div>
+        <div class="desc">${menuThemes[i]}</div>
+      `;
+      btn.onclick = () => startSerie(i);
+      menuGrid.appendChild(btn);
+    });
+
+    let currentSerieIndex = 0;
+    let quiz = [];
+    let index = 0;
+    let score = 0;
+    let locked = false;
+    let review = [];
+
+    const menuView = document.getElementById("menuView");
+    const quizView = document.getElementById("quizView");
+    const resultView = document.getElementById("resultView");
+    const serieLabel = document.getElementById("serieLabel");
+    const resultSerieLabel = document.getElementById("resultSerieLabel");
+    const questionEl = document.getElementById("question");
+    const answersEl = document.getElementById("answers");
+    const feedbackEl = document.getElementById("feedback");
+    const nextBtn = document.getElementById("nextBtn");
+    const counterEl = document.getElementById("counter");
+    const progressEl = document.getElementById("progress");
+    const finalScoreEl = document.getElementById("finalScore");
+    const finalTextEl = document.getElementById("finalText");
+    const reviewEl = document.getElementById("review");
+
+    function startSerie(serieIdx) {
+      currentSerieIndex = serieIdx;
+      quiz = series[serieIdx];
+      index = 0;
+      score = 0;
+      locked = false;
+      review = [];
+      menuView.classList.add("hidden");
+      resultView.classList.add("hidden");
+      quizView.classList.remove("hidden");
+      serieLabel.textContent = `ETM • Série ${serieIdx + 1}`;
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      locked = false;
+      feedbackEl.className = "feedback";
+      feedbackEl.style.display = "none";
+      nextBtn.disabled = true;
+
+      const item = quiz[index];
+      questionEl.textContent = item.q;
+      answersEl.innerHTML = "";
+      counterEl.textContent = `Question ${index + 1} / ${quiz.length}`;
+      progressEl.style.width = `${(index / quiz.length) * 100}%`;
+
+      item.a.forEach((text, i) => {
+        const btn = document.createElement("button");
+        btn.className = "answer";
+        btn.textContent = `${String.fromCharCode(65 + i)}. ${text}`;
+        btn.onclick = () => choose(i);
+        answersEl.appendChild(btn);
+      });
+    }
+
+    function choose(choice) {
+      if (locked) return;
+      locked = true;
+      nextBtn.disabled = false;
+
+      const item = quiz[index];
+      const buttons = [...document.querySelectorAll(".answer")];
+
+      buttons.forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === item.c) btn.classList.add("correct");
+      });
+
+      if (choice === item.c) {
+        score++;
+        feedbackEl.className = "feedback good";
+        feedbackEl.innerHTML = `Bonne réponse ✅<br><span style="font-weight:500">${item.e}</span>`;
+        review.push({ q: item.q, ok: true, right: item.a[item.c] });
+      } else {
+        buttons[choice].classList.add("wrong");
+        feedbackEl.className = "feedback bad";
+        feedbackEl.innerHTML = `Mauvaise réponse ❌<br>Bonne réponse : <b>${item.a[item.c]}</b><br><span style="font-weight:500">${item.e}</span>`;
+        review.push({ q: item.q, ok: false, right: item.a[item.c] });
+      }
+
+      feedbackEl.style.display = "block";
+      progressEl.style.width = `${((index + 1) / quiz.length) * 100}%`;
+    }
+
+    function nextQuestion() {
+      if (!locked) return;
+      index++;
+      if (index >= quiz.length) {
+        showResults();
+      } else {
+        renderQuestion();
+      }
+    }
+
+    function showResults() {
+      quizView.classList.add("hidden");
+      resultView.classList.remove("hidden");
+      resultSerieLabel.textContent = `Série ${currentSerieIndex + 1} terminée`;
+      finalScoreEl.textContent = `${score}/${quiz.length}`;
+
+      let txt = "";
+      if (score >= 35) txt = "Très solide. Là franchement tu commences à être vraiment bien pour l'ETM.";
+      else if (score >= 28) txt = "Pas mal du tout. Encore un peu de révision et ça peut passer tranquille.";
+      else if (score >= 20) txt = "Base correcte, mais il faut encore enchaîner quelques séries.";
+      else txt = "Reprends les bases tranquillement et refais plusieurs tests, ça va venir.";
+      finalTextEl.textContent = txt;
+
+      const errors = review.filter(x => !x.ok);
+      reviewEl.innerHTML = "<div><b>Récap rapide</b></div>" + errors.slice(0, 10).map(x => `
+        <div>❌ ${x.q}<br><span style="color:#ffe7cc">Bonne réponse : ${x.right}</span></div>
+      `).join("");
+
+      if (errors.length === 0) {
+        reviewEl.innerHTML = "<div>🔥 Aucune erreur sur cette série.</div>";
+      }
+    }
+
+    function restartCurrentSerie() { startSerie(currentSerieIndex); }
+    function backToMenu() {
+      quizView.classList.add("hidden");
+      resultView.classList.add("hidden");
+      menuView.classList.remove("hidden");
+    }
+
+    nextBtn.addEventListener("click", nextQuestion);
+    document.getElementById("restartBtn").addEventListener("click", restartCurrentSerie);
+    document.getElementById("restartBtn2").addEventListener("click", restartCurrentSerie);
+    document.getElementById("backMenuBtn").addEventListener("click", backToMenu);
+    document.getElementById("backMenuBtn2").addEventListener("click", backToMenu);
+  </script>
+</body>
+</html>
